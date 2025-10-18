@@ -17,7 +17,6 @@ interface FormData {
   email: string;
   walletAddress: string;
   username: string;
-  password: string;
 }
 
 interface UserData {
@@ -25,7 +24,6 @@ interface UserData {
   email: string;
   walletAddress: string;
   username: string;
-  password: string;
 }
 
 const ReTrustHomePage: React.FC = () => {
@@ -46,8 +44,7 @@ const ReTrustHomePage: React.FC = () => {
   const handleRegistration = (data: FormData) => {
     setUserData(data);
     setIsRegistrationModalOpen(false);
-    // Optionally navigate to the intended page after registration
-    // router.push("/marketplace");
+    router.push("/dashboard");
   };
 
   return (
@@ -92,6 +89,7 @@ const ReTrustHomePage: React.FC = () => {
         isOpen={isRegistrationModalOpen}
         onClose={() => setIsRegistrationModalOpen(false)}
         onSubmit={handleRegistration}
+        
       />
     </div>
   );

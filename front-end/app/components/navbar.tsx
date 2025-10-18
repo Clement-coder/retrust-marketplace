@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet, Menu, X } from "lucide-react";
+import { Wallet, Menu, X, Home, Wrench, ShieldCheck, Store, LayoutDashboard } from "lucide-react";
 
 interface NavLink {
   href: string;
   label: string;
+  icon: React.ReactNode;
 }
 
 interface UserData {
@@ -23,10 +24,11 @@ interface NavbarProps {
 }
 
 const navLinks: NavLink[] = [
-  { href: "/", label: "Home" },
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/sell", label: "Sell" },
-  { href: "/dashboard", label: "Dashboard" },
+    { href: "/#Home", label: "Home", icon: <Home className="w-4 h-4" /> },
+    { href: "/#how-it-works", label: "How it works", icon: <Wrench className="w-4 h-4" /> },
+    { href: "/#why-retrust", label: "Why ReTrust", icon: <ShieldCheck className="w-4 h-4" /> },
+    { href: "/#marketplace-preview", label: "Marketplace", icon: <Store className="w-4 h-4" /> },
+    { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
 ];
 
 const Navbar: React.FC<NavbarProps> = ({ userData, setIsRegistrationModalOpen }) => {
@@ -49,14 +51,15 @@ const Navbar: React.FC<NavbarProps> = ({ userData, setIsRegistrationModalOpen })
           </motion.div>
 
           <ul className="hidden md:flex items-center space-x-8">
-            {navLinks.map(({ href, label }) => (
+            {navLinks.map(({ href, label, icon }) => (
               <li key={href}>
                 <motion.a
                   href={href}
                   whileHover={{ y: -2 }}
-                  className="relative text-white hover:text-cyan-400 transition-colors group"
+                  className="relative text-white hover:text-cyan-400 transition-colors group flex items-center space-x-2"
                 >
-                  {label}
+                  <motion.div whileHover={{ rotate: [0, 10, -10, 0], scale: 1.2 }}>{icon}</motion.div>
+                  <span>{label}</span>
                   <span className="absolute left-0 -bottom-1 w-full h-0.5 bg-gradient-to-r from-cyan-400 to-violet-400 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
                 </motion.a>
               </li>
@@ -88,10 +91,11 @@ const Navbar: React.FC<NavbarProps> = ({ userData, setIsRegistrationModalOpen })
             className="md:hidden mt-2 bg-black/30 backdrop-blur-lg rounded-3xl border border-white/10 p-6"
           >
             <ul className="space-y-4">
-              {navLinks.map(({ href, label }) => (
+              {navLinks.map(({ href, label, icon }) => (
                 <li key={href}>
-                  <a href={href} className="block text-white hover:text-cyan-400 transition-colors p-3">
-                    {label}
+                  <a href={href} className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors p-3">
+                    {icon}
+                    <span>{label}</span>
                   </a>
                 </li>
               ))}

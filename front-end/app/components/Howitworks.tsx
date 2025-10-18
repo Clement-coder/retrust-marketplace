@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Package, Wallet, UserCheck } from "lucide-react";
 
 interface Step {
-  icon: JSX.Element;
+  icon: React.ReactNode;
   title: string;
   description: string;
 }
@@ -28,7 +28,7 @@ const steps: Step[] = [
 
 const HowItWorks: React.FC = () => {
   return (
-    <section className="py-20 px-4 relative">
+    <section id="how-it-works" className="py-20 px-4 relative">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

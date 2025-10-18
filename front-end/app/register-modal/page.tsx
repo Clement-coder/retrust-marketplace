@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { User, Mail, Wallet, X, Sparkles, Shield } from "lucide-react";
+import { User, Mail, Wallet, X, Sparkles, Shield, Loader } from "lucide-react";
 
 interface FormData {
   fullName: string;
@@ -26,6 +26,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
     username: "",
   });
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,15 +68,18 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (validateForm()) {
-      // Store form data in local storage
-      localStorage.setItem("userData", JSON.stringify(formData));
-      onSubmit(formData);
-      setFormData({
-        fullName: "",
-        email: "",
-        walletAddress: "",
-        username: "",
-      });
+      setIsSubmitting(true);
+      setTimeout(() => {
+        localStorage.setItem("userData", JSON.stringify(formData));
+        onSubmit(formData);
+        setFormData({
+          fullName: "",
+          email: "",
+          walletAddress: "",
+          username: "",
+        });
+        setIsSubmitting(false);
+      }, 1500);
     }
   };
 
@@ -143,16 +147,12 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
                 }}
                 transition={{ duration: 4, repeat: Infinity }}
               />
-                <Link href="/">
-                    <motion.button
-              
-                // onClick={onClose}
+                <motion.button
+                onClick={onClose}
                 className="absolute top-4 group right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg border border-white/20 text-white hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
               >
-                <X className="w-5 text-green group-hover:translate-x-6 h-5" />
+                <X className="w-5 h-5" />
               </motion.button>
-
-                </Link>
           
 
               <div className="relative z-10 p-8">
@@ -287,11 +287,24 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
 
                   <motion.button
                     type="submit"
+                    disabled={isSubmitting}
                     whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(6, 182, 212, 0.6)" }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all"
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all flex items-center justify-center space-x-2"
                   >
-                    Submit Details
+                    {isSubmitting ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader className="w-5 h-5" />
+                        </motion.div>
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      "Submit Details"
+                    )}
                   </motion.button>
                 </form>
 

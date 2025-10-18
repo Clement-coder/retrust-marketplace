@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Wallet, User2, ShoppingCart, Package, ArrowRight, LogOut } from "lucide-react";
+import { User, Mail, Wallet, User2, ShoppingCart, Package, ArrowRight, LogOut, UserPlus, ShieldAlert, AlertTriangle, X, Tag, Image as ImageIcon, DollarSign, PlusCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import RegistrationModal from "../register-modal/page";
@@ -22,26 +22,39 @@ interface FormData {
   username: string;
 }
 
-const sampleProducts = [
-  { id: 1, name: "iPhone 13 Pro", price: "0.45 ETH", image: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400", condition: "Like New" },
-  { id: 2, name: "MacBook Air M2", price: "1.2 ETH", image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400", condition: "Good" },
-  { id: 3, name: "Sony WH-1000XM4", price: "0.15 ETH", image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400", condition: "New" },
-];
+interface Product {
+  id: number;
+  name: string;
+  price: string;
+  image: string;
+  condition: string;
+}
 
 const Dashboard: React.FC = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [activeTab, setActiveTab] = useState<"marketplace" | "list-items">("marketplace");
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState<boolean>(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState<boolean>(false);
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     const storedData = localStorage.getItem("userData");
     if (storedData) {
       setUserData(JSON.parse(storedData));
-    } else {
-      setIsRegistrationModalOpen(true);
+    }
+    const storedProducts = localStorage.getItem("products");
+    if (storedProducts) {
+      setProducts(JSON.parse(storedProducts));
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("products", JSON.stringify(products));
+  }, [products]);
 
   const handleRegistration = (data: FormData) => {
     setUserData(data);
@@ -50,22 +63,249 @@ const Dashboard: React.FC = () => {
   };
 
   const handleLogout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const confirmLogout = () => {
     localStorage.removeItem("userData");
     setUserData(null);
+    setIsLogoutModalOpen(false);
     setIsRegistrationModalOpen(true);
   };
 
-  const handleActionClick = (action: "marketplace" | "sell") => {
-    if (!userData) {
-      setIsRegistrationModalOpen(true);
-    } else {
-      router.push(action === "marketplace" ? "/marketplace" : "/sell");
+  const handleAddProduct = (product: Omit<Product, 'id'>) => {
+    setProducts(prev => [...prev, { ...product, id: Date.now() }]);
+    setIsAddItemModalOpen(false);
+    setActiveTab("marketplace");
+  };
+
+  const handleDelete = (id: number) => {
+    setProductToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (productToDelete) {
+      setProducts(products.filter(p => p.id !== productToDelete));
+      setProductToDelete(null);
+      setIsDeleteModalOpen(false);
     }
   };
 
+  const AuthRequired = ({ title, description }: { title: string, description: string }) => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center mt-10 bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-lg shadow-cyan-500/10"
+    >
+      <div className="flex justify-center mb-4">
+        <ShieldAlert className="w-16 h-16 text-cyan-400" />
+      </div>
+      <h3 className="text-2xl font-bold mb-2">{title}</h3>
+      <p className="text-gray-400 mb-6">{description}</p>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsRegistrationModalOpen(true)}
+        className="px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50"
+      >
+        Register Now
+      </motion.button>
+    </motion.div>
+  );
+
+  const LogoutModal = () => (
+    <AnimatePresence>
+      {isLogoutModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-red-500/30 shadow-2xl shadow-red-500/20 p-8"
+          >
+            <div className="flex justify-center mb-4">
+              <AlertTriangle className="w-16 h-16 text-red-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-center mb-2">Are you sure?</h3>
+            <p className="text-gray-400 text-center mb-6">You are about to be logged out.</p>
+            <div className="flex justify-center space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="px-6 py-2 rounded-full bg-white/10 border border-white/20 text-white font-bold"
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={confirmLogout}
+                className="px-6 py-2 rounded-full bg-red-500/80 text-white font-bold flex items-center space-x-2"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Yes, Log Out</span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const DeleteModal = () => (
+    <AnimatePresence>
+      {isDeleteModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-red-500/30 shadow-2xl shadow-red-500/20 p-8"
+          >
+            <div className="flex justify-center mb-4">
+              <AlertTriangle className="w-16 h-16 text-red-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-center mb-2">Delete Item?</h3>
+            <p className="text-gray-400 text-center mb-6">This action cannot be undone.</p>
+            <div className="flex justify-center space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-6 py-2 rounded-full bg-white/10 border border-white/20 text-white font-bold"
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={confirmDelete}
+                className="px-6 py-2 rounded-full bg-red-500/80 text-white font-bold flex items-center space-x-2"
+              >
+                <Trash2 className="w-5 h-5" />
+                <span>Yes, Delete</span>
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const AddItemModal = () => {
+    const [formData, setFormData] = useState({ name: '', price: '', image: '', condition: 'New' });
+    const [errors, setErrors] = useState<Partial<typeof formData>>({});
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name as keyof typeof formData]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const validate = () => {
+      const newErrors: Partial<typeof formData> = {};
+      if (!formData.name) newErrors.name = 'Name is required';
+      if (!formData.price) newErrors.price = 'Price is required';
+      if (!formData.image) newErrors.image = 'Image URL is required';
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (validate()) {
+        handleAddProduct(formData);
+        setFormData({ name: '', price: '', image: '', condition: 'New' });
+      }
+    };
+
+    return (
+      <AnimatePresence>
+        {isAddItemModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-cyan-500/30 shadow-2xl shadow-cyan-500/20 p-8"
+            >
+              <motion.button
+                onClick={() => setIsAddItemModalOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </motion.button>
+              <h3 className="text-2xl font-bold mb-6">List a New Item</h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
+                    <input type="text" name="name" placeholder="Product Name" value={formData.name} onChange={handleInputChange} className={`w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 ${errors.name ? 'border-red-500/50' : 'border-white/10'}`} />
+                </div>
+                <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
+                    <input type="text" name="price" placeholder="Price (ETH)" value={formData.price} onChange={handleInputChange} className={`w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 ${errors.price ? 'border-red-500/50' : 'border-white/10'}`} />
+                </div>
+                <div className="relative">
+                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
+                    <input type="text" name="image" placeholder="Image URL" value={formData.image} onChange={handleInputChange} className={`w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 ${errors.image ? 'border-red-500/50' : 'border-white/10'}`} />
+                </div>
+                <div className="relative">
+                    <select name="condition" value={formData.condition} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 border-white/10">
+                        <option>New</option>
+                        <option>Like New</option>
+                        <option>Good</option>
+                    </select>
+                </div>
+                <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold">List Item</motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  };
+
+  const EmptyMarketplace = () => (
+    <motion.div className="text-center mt-10 bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-lg shadow-cyan-500/10">
+        <div className="flex justify-center mb-4">
+            <ShoppingCart className="w-16 h-16 text-cyan-400" />
+        </div>
+        <h3 className="text-2xl font-bold mb-2">Marketplace is Empty</h3>
+        <p className="text-gray-400 mb-6">Be the first to list an item and get it seen by the community.</p>
+        <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveTab("list-items")}
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50 flex items-center space-x-2 mx-auto"
+        >
+            <PlusCircle className="w-5 h-5" />
+            <span>List Your First Item</span>
+        </motion.button>
+    </motion.div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white overflow-hidden">
-      {/* Animated Background */}
       <Navbar/>
       <motion.div
         className="fixed inset-0 pointer-events-none"
@@ -85,24 +325,44 @@ const Dashboard: React.FC = () => {
         ))}
       </motion.div>
 
-      {/* Dashboard Content */}
       <div className="relative pt-16 pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto  sm:mx-20">
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-3xl sm:text-4xl font-bold bg-white/5 backdrop-blur-lg border-white/20  rounded-2xl p-6 sm:p-8 border border-white/10mt-6  text-center bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent mb-8"
+            className="text-lg sm:text-md mt-14 gap-2 flex items-center justify-between bg-white/5 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border  border-white/10  shadow-lg shadow-cyan-500/20"
           >
-            Welcome, {userData ? userData.fullName.split(" ")[0] : "User"}!
+            Welcome, {userData ? userData.fullName.split(" ")[0] : "User"} 
+            <span> &#128075; </span>!
+            {userData ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className=" px-4 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 flex items-center space-x-2 mx-auto"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsRegistrationModalOpen(true)}
+                className=" px-4 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 flex items-center space-x-2 mx-auto"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Register</span>
+              </motion.button>
+            )}
           </motion.h1>
 
-          {/* User Info Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border  border-white/10  shadow-lg shadow-cyan-500/20"
+            className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border  border-white/10 mt-8  shadow-lg shadow-cyan-500/20"
           >
             <h2 className="text-xl sm:text-2xl font-bold mb-6 flex items-center space-x-2">
               <User2 className="w-6 h-6 text-cyan-400" />
@@ -110,28 +370,28 @@ const Dashboard: React.FC = () => {
             </h2>
             {userData ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div className="flex items-center space-x-3">
+                <div className="flex bg-white/10 border border-gray-300/20 py-4 px-4 rounded-2xl items-center space-x-3">
                   <User className="w-5 h-5 text-cyan-400" />
                   <div>
                     <p className="text-sm text-gray-400">Full Name</p>
                     <p className="font-medium">{userData.fullName}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center bg-white/10 border border-gray-300/20 py-4 px-4 rounded-2xl space-x-3">
                   <Mail className="w-5 h-5 text-cyan-400" />
                   <div>
                     <p className="text-sm text-gray-400">Email</p>
                     <p className="font-medium">{userData.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center bg-white/10 border border-gray-300/20 py-4 px-4 rounded-2xl space-x-3">
                   <Wallet className="w-5 h-5 text-cyan-400" />
                   <div>
                     <p className="text-sm text-gray-400">Wallet</p>
                     <p className="font-medium truncate max-w-[200px]">{userData.walletAddress}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center bg-white/10 border border-gray-300/20 py-4 px-4 rounded-2xl space-x-3">
                   <User2 className="w-5 h-5 text-cyan-400" />
                   <div>
                     <p className="text-sm text-gray-400">Username</p>
@@ -145,8 +405,7 @@ const Dashboard: React.FC = () => {
        
           </motion.div>
 
-          {/* Tabs */}
-          <div className="flex justify-center space-x-4 mb-6">
+          <div className="flex justify-center space-x-4 mt-10">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -175,7 +434,6 @@ const Dashboard: React.FC = () => {
             </motion.button>
           </div>
 
-          {/* Tab Content */}
           <AnimatePresence mode="wait">
             {activeTab === "marketplace" ? (
               <motion.div
@@ -184,44 +442,56 @@ const Dashboard: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
               >
-                {sampleProducts.map((product) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(6, 182, 212, 0.3)" }}
-                    className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 hover:border-cyan-400/50"
-                  >
-                    <div className="relative h-40 sm:h-48 overflow-hidden">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        
-                        style={{ objectFit: "cover" }}
-                        className="hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-2 right-2 bg-green-500/80 text-white text-xs font-medium px-2 py-1 rounded-full">
-                        {product.condition}
+                {userData ? (
+                  <motion.div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-lg shadow-cyan-500/10 mt-10">
+                    {products.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {products.map((product) => (
+                          <motion.div
+                            key={product.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-slate-800/50 rounded-xl border border-cyan-500/20 overflow-hidden shadow-lg shadow-cyan-500/10 group"
+                          >
+                            <div className="relative h-48 overflow-hidden">
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                style={{ objectFit: "cover" }}
+                                className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute top-2 right-2 bg-green-500/80 text-white text-xs font-medium px-2 py-1 rounded-full">
+                                {product.condition}
+                              </div>
+                              <motion.button
+                                onClick={() => handleDelete(product.id)}
+                                className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                whileHover={{ scale: 1.1, backgroundColor: '#ef4444' }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            </div>
+                            <div className="p-4">
+                              <h3 className="font-bold text-lg mb-1">{product.name}</h3>
+                              <p className="text-sm text-gray-400 mb-2">Listed by @{userData.username}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-cyan-400 font-bold text-xl">{product.price} ETH</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-base sm:text-lg">{product.name}</h3>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-cyan-400 font-bold">{product.price}</span>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleActionClick("marketplace")}
-                          className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-full flex items-center justify-center"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </div>
+                    ) : (
+                      <EmptyMarketplace />
+                    )}
                   </motion.div>
-                ))}
+                ) : (
+                  <AuthRequired title="Access Denied" description="Please register to view the marketplace." />
+                )}
               </motion.div>
             ) : (
               <motion.div
@@ -230,21 +500,27 @@ const Dashboard: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="text-center"
+                className="text-center mt-10"
               >
-                <h2 className="text-xl sm:text-2xl font-bold mb-4">List Your Items</h2>
-                <p className="text-gray-300 mb-6 max-w-md mx-auto">
-                  Sell your items securely on ReTrust. Click below to start listing.
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(6, 182, 212, 0.5)" }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleActionClick("sell")}
-                  className="px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-medium flex items-center space-x-2 mx-auto"
-                >
-                  <Package className="w-5 h-5" />
-                  <span>List an Item</span>
-                </motion.button>
+                {userData ? (
+                  <motion.div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-lg shadow-cyan-500/10">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4">List Your Items</h2>
+                    <p className="text-gray-300 mb-6 max-w-md mx-auto">
+                      Sell your items securely on ReTrust. Click below to start listing.
+                    </p>
+                    <motion.button
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(6, 182, 212, 0.5)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsAddItemModalOpen(true)}
+                      className="px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-medium flex items-center space-x-2 mx-auto"
+                    >
+                      <Package className="w-5 h-5" />
+                      <span>List an Item</span>
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <AuthRequired title="Action Required" description="Please register to list an item." />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -256,6 +532,9 @@ const Dashboard: React.FC = () => {
         onClose={() => setIsRegistrationModalOpen(false)}
         onSubmit={handleRegistration}
       />
+      <LogoutModal />
+      <AddItemModal />
+      <DeleteModal />
     </div>
   );
 };

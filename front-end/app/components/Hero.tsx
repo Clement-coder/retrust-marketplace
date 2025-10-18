@@ -18,7 +18,7 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ userData, handleActionClick }) => {
   return (
-    <section className="relative pt-32 pb-20 px-4">
+    <section id="Home" className="relative pt-32 pb-20 px-4">
       <div className="container mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <motion.div

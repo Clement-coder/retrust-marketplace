@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Lock, CheckCircle, Globe } from "lucide-react";
 
 interface Feature {
-  icon: JSX.Element;
+  icon: React.ReactNode;
   title: string;
   description: string;
 }
@@ -28,7 +28,7 @@ const features: Feature[] = [
 
 const WhyReTrust: React.FC = () => {
   return (
-    <section className="py-20 px-4 relative">
+    <section id="why-retrust" className="py-20 px-4 relative">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
