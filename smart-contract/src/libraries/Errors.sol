@@ -18,6 +18,9 @@ library Errors {
     error ProductSold();
     error AlreadySold();
     error IncorrectEthSent();
+    error ProductNotFound();
+    error ProductAlreadySold();
+    error ProductNotListed();
 
     // --- Escrow Related ---
     error AlreadyLocked();
@@ -27,4 +30,5 @@ library Errors {
     error NotMarketplace();
     error TransferFailed();
     error NoEthSent();
+    error NotLocked();
 }

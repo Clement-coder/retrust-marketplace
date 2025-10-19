@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Wallet, User2, ShoppingCart, Package, ArrowRight, LogOut, UserPlus, ShieldAlert, AlertTriangle, X, Tag, Image as ImageIcon, DollarSign, PlusCircle, Trash2 } from "lucide-react";
+import { User, Mail, Wallet, User2, ShoppingCart, Package, ArrowRight, LogOut, UserPlus, ShieldAlert, AlertTriangle, X, Tag, Image as ImageIcon, DollarSign, Trash2, MessageSquare, MapPin, Loader, PlusCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import RegistrationModal from "../register-modal/page";
@@ -25,9 +25,12 @@ interface FormData {
 interface Product {
   id: number;
   name: string;
-  price: string;
+  description: string;
   image: string;
-  condition: string;
+  category: string;
+  location: string;
+  condition: number;
+  price: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -39,7 +42,16 @@ const Dashboard: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [particlePositions, setParticlePositions] = useState<{ left: string; top: string; }[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    const positions = [...Array(15)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+    }));
+    setParticlePositions(positions);
+  }, []);
 
   useEffect(() => {
     const storedData = localStorage.getItem("userData");
@@ -204,35 +216,88 @@ const Dashboard: React.FC = () => {
     </AnimatePresence>
   );
 
+
+
   const AddItemModal = () => {
-    const [formData, setFormData] = useState({ name: '', price: '', image: '', condition: 'New' });
+    const [formData, setFormData] = useState({
+      name: "",
+      description: "",
+      image: "",
+      category: "",
+      location: "",
+      condition: 1,
+      price: "",
+    });
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [errors, setErrors] = useState<Partial<typeof formData>>({});
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name as keyof typeof formData]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
-        }
+  
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      if (errors[name as keyof typeof formData]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
     };
-
-    const validate = () => {
+  
+    const handleConditionChange = (condition: number) => {
+      setFormData((prev) => ({ ...prev, condition }));
+    };
+  
+    const validateForm = () => {
       const newErrors: Partial<typeof formData> = {};
-      if (!formData.name) newErrors.name = 'Name is required';
-      if (!formData.price) newErrors.price = 'Price is required';
-      if (!formData.image) newErrors.image = 'Image URL is required';
+      if (!formData.name.trim()) newErrors.name = "Product name is required";
+      if (!formData.description.trim()) newErrors.description = "Description is required";
+      if (!formData.image.trim()) newErrors.image = "Image URL is required";
+      if (!formData.category.trim()) newErrors.category = "Category is required";
+      if (!formData.location.trim()) newErrors.location = "Location is required";
+      if (!formData.price.trim() || isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
+        newErrors.price = "A valid price is required";
+      }
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     };
-
-    const handleSubmit = (e: React.FormEvent) => {
+  
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (validate()) {
-        handleAddProduct(formData);
-        setFormData({ name: '', price: '', image: '', condition: 'New' });
+      if (validateForm()) {
+        setIsSubmitting(true);
+        setTimeout(() => {
+          handleAddProduct(formData);
+          setFormData({
+            name: "",
+            description: "",
+            image: "",
+            category: "",
+            location: "",
+            condition: 1,
+            price: "",
+          });
+          setIsSubmitting(false);
+        }, 1500);
       }
     };
 
+    const inputVariants = {
+      hidden: { opacity: 0, x: -20 },
+      visible: (i: number) => ({
+        opacity: 1,
+        x: 0,
+        transition: {
+          delay: i * 0.1,
+          duration: 0.5,
+          ease: "easeOut",
+        },
+      }),
+    };
+
+    const conditionOptions = [
+      { label: "New", value: 1 },
+      { label: "Like New", value: 2 },
+      { label: "Good", value: 3 },
+      { label: "Fair", value: 4 },
+      { label: "Used", value: 5 },
+    ];
+  
     return (
       <AnimatePresence>
         {isAddItemModalOpen && (
@@ -247,37 +312,188 @@ const Dashboard: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-cyan-500/30 shadow-2xl shadow-cyan-500/20 p-8"
+              className="relative w-full max-w-4xl bg-slate-900/90 backdrop-blur-xl  my-auto rounded-3xl border border-cyan-500/30  shadow-2xl shadow-cyan-500/20  mx-auto"
             >
               <motion.button
                 onClick={() => setIsAddItemModalOpen(false)}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white"
+                className="absolute top-4 group right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg border border-white/20 text-white hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
               >
                 <X className="w-5 h-5" />
               </motion.button>
-              <h3 className="text-2xl font-bold mb-6">List a New Item</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
-                    <input type="text" name="name" placeholder="Product Name" value={formData.name} onChange={handleInputChange} className={`w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 ${errors.name ? 'border-red-500/50' : 'border-white/10'}`} />
-                </div>
-                <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
-                    <input type="text" name="price" placeholder="Price (ETH)" value={formData.price} onChange={handleInputChange} className={`w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 ${errors.price ? 'border-red-500/50' : 'border-white/10'}`} />
-                </div>
-                <div className="relative">
-                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
-                    <input type="text" name="image" placeholder="Image URL" value={formData.image} onChange={handleInputChange} className={`w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 ${errors.image ? 'border-red-500/50' : 'border-white/10'}`} />
-                </div>
-                <div className="relative">
-                    <select name="condition" value={formData.condition} onChange={handleInputChange} className="w-full pl-12 pr-4 py-3 bg-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 border-white/10">
-                        <option>New</option>
-                        <option>Like New</option>
-                        <option>Good</option>
-                    </select>
-                </div>
-                <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold">List Item</motion.button>
-              </form>
+              <div className="relative z-10 p-8 max-h-[80vh] overflow-y-auto hide-scrollbar">
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-left justify-start gap-5 mb-6 flex"
+                >
+                  <motion.div
+                    className="w-16 h-16  bg-gradient-to-r from-cyan-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/50"
+                  >
+                    <Package className="w-8 h-8 text-white" />
+                  </motion.div>
+                  <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2">
+                      List a New Product
+                    </h2>
+                    <p className="text-gray-400 text-sm">Fill out the details below to add your product to the marketplace.</p>
+                  </div>
+                </motion.div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <motion.div custom={0} variants={inputVariants} initial="hidden" animate="visible">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Product Name</label>
+                    <div className="relative">
+                      <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Vintage Leather Jacket"
+                        className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                          errors.name ? "border-red-500/50" : "border-white/10"
+                        } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                      />
+                    </div>
+                    {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                  </motion.div>
+
+                  <motion.div custom={1} variants={inputVariants} initial="hidden" animate="visible">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                    <div className="relative">
+                      <MessageSquare className="absolute left-3 top-5 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        placeholder="Describe your product in detail..."
+                        rows={4}
+                        className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                          errors.description ? "border-red-500/50" : "border-white/10"
+                        } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                      />
+                    </div>
+                    {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
+                  </motion.div>
+
+                  <motion.div custom={2} variants={inputVariants} initial="hidden" animate="visible">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
+                    <div className="relative">
+                      <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                      <input
+                        type="text"
+                        name="image"
+                        value={formData.image}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com/image.png"
+                        className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                          errors.image ? "border-red-500/50" : "border-white/10"
+                        } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                      />
+                    </div>
+                    {errors.image && <p className="text-red-400 text-xs mt-1">{errors.image}</p>}
+                  </motion.div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.div custom={3} variants={inputVariants} initial="hidden" animate="visible">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                      <div className="relative">
+                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                        <input
+                          type="text"
+                          name="category"
+                          value={formData.category}
+                          onChange={handleInputChange}
+                          placeholder="e.g., Apparel"
+                          className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                            errors.category ? "border-red-500/50" : "border-white/10"
+                          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                        />
+                      </div>
+                      {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
+                    </motion.div>
+
+                    <motion.div custom={4} variants={inputVariants} initial="hidden" animate="visible">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                        <input
+                          type="text"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          placeholder="e.g., New York, USA"
+                          className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                            errors.location ? "border-red-500/50" : "border-white/10"
+                          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                        />
+                      </div>
+                      {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location}</p>}
+                    </motion.div>
+                  </div>
+
+                  <motion.div custom={5} variants={inputVariants} initial="hidden" animate="visible">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Condition</label>
+                    <div className="relative flex space-x-2">
+                      {conditionOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => handleConditionChange(opt.value)}
+                          className={`flex-1 py-2 text-sm rounded-lg border transition-all ${
+                            formData.condition === opt.value
+                              ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/50"
+                              : "bg-white/5 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+
+                  <motion.div custom={6} variants={inputVariants} initial="hidden" animate="visible">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Price (in ETH)</label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                      <input
+                        type="text"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        placeholder="0.5"
+                        className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                          errors.price ? "border-red-500/50" : "border-white/10"
+                        } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                      />
+                    </div>
+                    {errors.price && <p className="text-red-400 text-xs mt-1">{errors.price}</p>}
+                  </motion.div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(6, 182, 212, 0.6)" }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all flex items-center justify-center space-x-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader className="w-5 h-5" />
+                        </motion.div>
+                        <span>Submitting Product...</span>
+                      </>
+                    ) : (
+                      "List Product"
+                    )}
+                  </motion.button>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -314,11 +530,11 @@ const Dashboard: React.FC = () => {
         transition={{ duration: 1 }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent" />
-        {[...Array(15)].map((_, i) => (
+        {particlePositions.map((pos, i) => (
           <motion.div
             key={i}
             className="absolute w-2 h-2 bg-cyan-400 rounded-full"
-            style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
+            style={{ left: pos.left, top: pos.top }}
             animate={{ y: [0, -20, 0], opacity: [0.3, 0.8, 0.3], scale: [1, 1.3, 1] }}
             transition={{ duration: 2 + Math.random(), repeat: Infinity, delay: Math.random() }}
           />
@@ -538,5 +754,249 @@ const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+const ListProductForm = ({ handleAddProduct }: { handleAddProduct: (product: Omit<Product, 'id'>) => void }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    image: "",
+    category: "",
+    location: "",
+    condition: 1,
+    price: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Partial<typeof formData>>({});
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof typeof formData]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleConditionChange = (condition: number) => {
+    setFormData((prev) => ({ ...prev, condition }));
+  };
+
+  const validateForm = () => {
+    const newErrors: Partial<typeof formData> = {};
+    if (!formData.name.trim()) newErrors.name = "Product name is required";
+    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (!formData.image.trim()) newErrors.image = "Image URL is required";
+    if (!formData.category.trim()) newErrors.category = "Category is required";
+    if (!formData.location.trim()) newErrors.location = "Location is required";
+    if (!formData.price.trim() || isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
+      newErrors.price = "A valid price is required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        handleAddProduct(formData);
+        setFormData({
+          name: "",
+          description: "",
+          image: "",
+          category: "",
+          location: "",
+          condition: 1,
+          price: "",
+        });
+        setIsSubmitting(false);
+      }, 1500);
+    }
+  };
+
+  const inputVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    }),
+  };
+
+  const conditionOptions = [
+    { label: "New", value: 1 },
+    { label: "Like New", value: 2 },
+    { label: "Good", value: 3 },
+    { label: "Fair", value: 4 },
+    { label: "Used", value: 5 },
+  ];
+
+  return (
+    <motion.div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-lg shadow-cyan-500/10">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">List Your Items</h2>
+      <p className="text-gray-300 mb-6 max-w-md mx-auto">
+        Sell your items securely on ReTrust. Fill out the form below to start listing.
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+          <motion.div custom={0} variants={inputVariants} initial="hidden" animate="visible">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Product Name</label>
+            <div className="relative">
+              <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="e.g., Vintage Leather Jacket"
+                className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                  errors.name ? "border-red-500/50" : "border-white/10"
+                } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+              />
+            </div>
+            {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+          </motion.div>
+
+          <motion.div custom={1} variants={inputVariants} initial="hidden" animate="visible">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+            <div className="relative">
+              <MessageSquare className="absolute left-3 top-5 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+              <textarea
+                name="description"
+                value={formData.description}
+                // @ts-ignore
+                onChange={handleInputChange}
+                placeholder="Describe your product in detail..."
+                rows={4}
+                className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                  errors.description ? "border-red-500/50" : "border-white/10"
+                } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+              />
+            </div>
+            {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
+          </motion.div>
+
+          <motion.div custom={2} variants={inputVariants} initial="hidden" animate="visible">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
+            <div className="relative">
+              <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+              <input
+                type="text"
+                name="image"
+                value={formData.image}
+                onChange={handleInputChange}
+                placeholder="https://example.com/image.png"
+                className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                  errors.image ? "border-red-500/50" : "border-white/10"
+                } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+              />
+            </div>
+            {errors.image && <p className="text-red-400 text-xs mt-1">{errors.image}</p>}
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <motion.div custom={3} variants={inputVariants} initial="hidden" animate="visible">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Apparel"
+                  className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                    errors.category ? "border-red-500/50" : "border-white/10"
+                  } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                />
+              </div>
+              {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
+            </motion.div>
+
+            <motion.div custom={4} variants={inputVariants} initial="hidden" animate="visible">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  placeholder="e.g., New York, USA"
+                  className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                    errors.location ? "border-red-500/50" : "border-white/10"
+                  } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                />
+              </div>
+              {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location}</p>}
+            </motion.div>
+          </div>
+
+          <motion.div custom={5} variants={inputVariants} initial="hidden" animate="visible">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Condition</label>
+            <div className="relative flex space-x-2">
+              {conditionOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleConditionChange(opt.value)}
+                  className={`flex-1 py-2 text-sm rounded-lg border transition-all ${
+                    formData.condition === opt.value
+                      ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/50"
+                      : "bg-white/5 border-white/10 hover:bg-white/10"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div custom={6} variants={inputVariants} initial="hidden" animate="visible">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Price (in ETH)</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+              <input
+                type="text"
+                name="price"
+                value={formData.price}
+                onChange={handleInputChange}
+                placeholder="0.5"
+                className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                  errors.price ? "border-red-500/50" : "border-white/10"
+                } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+              />
+            </div>
+            {errors.price && <p className="text-red-400 text-xs mt-1">{errors.price}</p>}
+          </motion.div>
+
+          <motion.button
+            type="submit"
+            disabled={isSubmitting}
+            whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(6, 182, 212, 0.6)" }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all flex items-center justify-center space-x-2"
+          >
+            {isSubmitting ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader className="w-5 h-5" />
+                </motion.div>
+                <span>Submitting Product...</span>
+              </>
+            ) : (
+              "List Product"
+            )}
+          </motion.button>
+        </form>
+    </motion.div>
+  );
+}
 
 export default Dashboard;

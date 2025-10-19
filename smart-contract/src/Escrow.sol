@@ -27,12 +27,12 @@ contract Escrow {
         marketplace = _marketplace;
     }
 
-    function deposit(uint256 productId, address seller) external payable onlyMarketplace {
+    function lockFunds(address seller, address buyer, uint256 productId) external payable onlyMarketplace {
         if (msg.value == 0) revert Errors.InvalidAmount();
         EscrowInfo storage e = escrows[productId];
         if (e.locked) revert Errors.AlreadyLocked();
 
-        e.buyer = tx.origin;
+        e.buyer = buyer;
         e.seller = seller;
         e.amount = msg.value;
         e.locked = true;
@@ -58,5 +58,9 @@ contract Escrow {
 
         (bool success, ) = e.buyer.call{value: e.amount}("");
         if (!success) revert Errors.TransferFailed();
+    }
+
+    function getBuyer(uint256 productId) external view returns (address) {
+        return escrows[productId].buyer;
     }
 }

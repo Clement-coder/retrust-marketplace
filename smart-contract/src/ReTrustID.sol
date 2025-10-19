@@ -24,7 +24,7 @@ contract ReTrustID {
         string memory location,
         string memory country
     ) external {
-        if (users[msg.sender].registered) revert Errors.InvalidInput();
+        if (users[msg.sender].registered) revert Errors.AlreadyRegistered();
         if (usernameTaken[username]) revert Errors.UsernameTaken();
 
         users[msg.sender] = User({

@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { User, Mail, Wallet, X, Sparkles, Shield, Loader } from "lucide-react";
+import { User, Mail, Wallet, X, Sparkles, Shield, Loader, MapPin, Globe } from "lucide-react";
 
 interface FormData {
   fullName: string;
   email: string;
   walletAddress: string;
   username: string;
+  location: string;
+  country: string;
 }
 
 interface RegistrationModalProps {
@@ -24,6 +26,8 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
     email: "",
     walletAddress: "",
     username: "",
+    location: "",
+    country: "",
   });
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -60,6 +64,8 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
     if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
     if (!formData.walletAddress) newErrors.walletAddress = "Please connect your wallet";
     if (!formData.username.trim()) newErrors.username = "Username is required";
+    if (!formData.location.trim()) newErrors.location = "Location is required";
+    if (!formData.country.trim()) newErrors.country = "Country is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -77,6 +83,8 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
           email: "",
           walletAddress: "",
           username: "",
+          location: "",
+          country: "",
         });
         setIsSubmitting(false);
       }, 1500);
@@ -177,41 +185,43 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
                 </motion.div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <motion.div custom={0} variants={inputVariants} initial="hidden" animate="visible">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        placeholder="John Doe"
-                        className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
-                          errors.fullName ? "border-red-500/50" : "border-white/10"
-                        } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
-                      />
-                    </div>
-                    {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
-                  </motion.div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.div custom={0} variants={inputVariants} initial="hidden" animate="visible">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-200" />
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          placeholder="John Doe"
+                          className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                            errors.fullName ? "border-red-500/50" : "border-white/10"
+                          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                        />
+                      </div>
+                      {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
+                    </motion.div>
 
-                  <motion.div custom={1} variants={inputVariants} initial="hidden" animate="visible">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="john@example.com"
-                        className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
-                          errors.email ? "border-red-500/50" : "border-white/10"
-                        } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
-                      />
-                    </div>
-                    {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
-                  </motion.div>
+                    <motion.div custom={1} variants={inputVariants} initial="hidden" animate="visible">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="john@example.com"
+                          className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                            errors.email ? "border-red-500/50" : "border-white/10"
+                          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                        />
+                      </div>
+                      {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                    </motion.div>
+                  </div>
 
                   <motion.div custom={2} variants={inputVariants} initial="hidden" animate="visible">
                     <label className="block text-sm font-medium text-gray-300 mb-2">Wallet Address</label>
@@ -267,22 +277,60 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onClose, 
                     </motion.button>
                   </motion.div>
 
-                  <motion.div custom={3} variants={inputVariants} initial="hidden" animate="visible">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.div custom={3} variants={inputVariants} initial="hidden" animate="visible">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                        <input
+                          type="text"
+                          name="username"
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          placeholder="johndoe"
+                          className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                            errors.username ? "border-red-500/50" : "border-white/10"
+                          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                        />
+                      </div>
+                      {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username}</p>}
+                    </motion.div>
+
+                    <motion.div custom={4} variants={inputVariants} initial="hidden" animate="visible">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                        <input
+                          type="text"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          placeholder="New York, USA"
+                          className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
+                            errors.location ? "border-red-500/50" : "border-white/10"
+                          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
+                        />
+                      </div>
+                      {errors.location && <p className="text-red-400 text-xs mt-1">{errors.location}</p>}
+                    </motion.div>
+                  </div>
+
+                  <motion.div custom={5} variants={inputVariants} initial="hidden" animate="visible">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Country</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
                       <input
                         type="text"
-                        name="username"
-                        value={formData.username}
+                        name="country"
+                        value={formData.country}
                         onChange={handleInputChange}
-                        placeholder="johndoe"
+                        placeholder="USA"
                         className={`w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border ${
-                          errors.username ? "border-red-500/50" : "border-white/10"
+                          errors.country ? "border-red-500/50" : "border-white/10"
                         } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all`}
                       />
                     </div>
-                    {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username}</p>}
+                    {errors.country && <p className="text-red-400 text-xs mt-1">{errors.country}</p>}
                   </motion.div>
 
                   <motion.button

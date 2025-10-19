@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Wallet, Menu, X, Home, Wrench, ShieldCheck, Store, LayoutDashboard } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Wallet, Menu, X, Home, Wrench, ShieldCheck, Store, LayoutDashboard, Box } from "lucide-react";
 
 interface NavLink {
   href: string;
@@ -42,7 +42,7 @@ const Navbar: React.FC<NavbarProps> = ({ userData, setIsRegistrationModalOpen })
       className="fixed top-0 left-0 right-0 z-50"
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20 bg-black/30 backdrop-blur-lg rounded-full border border-white/10 my-4 px-8 shadow-lg shadow-cyan-500/10">
+        <div className="flex items-center justify-between h-16 sm:h-20 bg-black/30 backdrop-blur-lg rounded-full border border-white/10 my-2 sm:my-4 px-4 sm:px-8 shadow-lg shadow-cyan-500/10">
           <motion.div
             whileHover={{ scale: 1.05 }}
             className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent"
@@ -66,49 +66,43 @@ const Navbar: React.FC<NavbarProps> = ({ userData, setIsRegistrationModalOpen })
             ))}
           </ul>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsRegistrationModalOpen(true)}
-            className="hidden md:flex items-center space-x-2 px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold shadow-lg shadow-cyan-500/50"
-          >
-            <Wallet className="w-4 h-4" />
-            <span>{userData ? `Hi, ${userData.fullName.split(" ")[0]}` : "Connect Wallet"}</span>
-          </motion.button>
+         <div className="items-center flex justify-center space-x-2 px-6 py-3 rounded-full bg-white/5 text-white font-bold">
+              <Box className="w-5 h-5 text-cyan-400" />
+              <span className="text-xs sm:text-sm font-medium text-gray-300">web3 powered</span>
+            </div>
 
-          <button
+          <motion.button
             onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden text-white"
+            animate={isMobileMenuOpen ? "open" : "closed"}
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            <motion.div variants={{ open: { rotate: 180 }, closed: { rotate: 0 } }} transition={{ duration: 0.2 }}>
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </motion.div>
+          </motion.button>
         </div>
 
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden mt-2 bg-black/30 backdrop-blur-lg rounded-3xl border border-white/10 p-6"
-          >
-            <ul className="space-y-4">
-              {navLinks.map(({ href, label, icon }) => (
-                <li key={href}>
-                  <a href={href} className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors p-3">
-                    {icon}
-                    <span>{label}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => setIsRegistrationModalOpen(true)}
-              className="w-full mt-4 flex items-center justify-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-bold"
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="md:hidden mt-2 bg-black/30 backdrop-blur-lg rounded-3xl border border-white/10 p-6"
             >
-              <Wallet className="w-5 h-5" />
-              <span>{userData ? `Hi, ${userData.fullName.split(" ")[0]}` : "Connect Wallet"}</span>
-            </button>
-          </motion.div>
-        )}
+              <ul className="space-y-4">
+                {navLinks.map(({ href, label, icon }) => (
+                  <li key={href}>
+                    <a href={href} className="flex items-center space-x-3 text-white hover:text-cyan-400 transition-colors p-3">
+                      {icon}
+                      <span>{label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );
