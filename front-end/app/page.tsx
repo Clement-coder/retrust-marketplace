@@ -11,12 +11,15 @@ import MarketplacePreview from "./components/marketPlacePreview";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 import RegistrationModal from "./register-modal/page";
+import ClientSideBubbles from "./components/ClientSideBubbles";
 
 interface FormData {
   fullName: string;
   email: string;
   walletAddress: string;
   username: string;
+  location: string;
+  country: string;
 }
 
 interface UserData {
@@ -24,6 +27,8 @@ interface UserData {
   email: string;
   walletAddress: string;
   username: string;
+  location: string;
+  country: string;
 }
 
 const ReTrustHomePage: React.FC = () => {
@@ -56,26 +61,7 @@ const ReTrustHomePage: React.FC = () => {
           style={{ y }}
           className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptMCAxMmMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptMCAxMmMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnpNMTIgMThjMy4zMTQgMCA2IDIuNjg2IDYgNnMtMi42ODYgNi02IDYtNi0yLjY4Ni02LTYgMi42ODYtNiA2LTZ6bTAgMTJjMy4zMTQgMCA2IDIuNjg2IDYgNnMtMi42ODYgNi02IDYtNi0yLjY4Ni02LTYgMi42ODYtNiA2LTZ6bTAgMTJjMy4zMTQgMCA2IDIuNjg2IDYgNnMtMi42ODYgNi02IDYtNi0yLjY86LTYgMi42ODYtNiA2LTZ6IiBzdHJva2U9IiMwZmYiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjEiLz48L2c+PC9zdmc+')] opacity-20"
         />
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-cyan-400 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0.2, 0.8, 0.2],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
+        <ClientSideBubbles />
       </div>
 
       <Navbar userData={userData} setIsRegistrationModalOpen={setIsRegistrationModalOpen} />
